@@ -87,14 +87,20 @@ var _ = BeforeSuite(func() {
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
-	
-	err = (&DevEnvironmentReconciler){
+
+	err = (&DevEnvironmentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr)
-  Expect(err).NotTo(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 
-  go func() {
+	err = (&DevEnvironmentConfigReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	go func() {
 		defer GinkgoRecover()
 		err = mgr.Start(ctx)
 		Expect(err).NotTo(HaveOccurred())

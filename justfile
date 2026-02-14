@@ -14,10 +14,15 @@ initialise-project name domain="machinology":
 create-api kind:
   kubebuilder create api --group {{default_group}} --version v1alpha1 --kind {{kind}}
 
-# make manifests
+# create manifests
 [group("kubebuilder")]
-make-manifests:
+manifests:
   make manifests
+
+# generate deepcopies
+[group("kubebuilder")]
+generate:
+  make generate
 
 
 # init module
