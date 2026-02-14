@@ -18,67 +18,58 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	devv1alpha1 "github.com/machinology/mach-k8s-devenv-controller/api/v1alpha1"
 )
 
 var _ = Describe("DevEnvironment Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
+	const timeout = time.Second * 10
+	const interval = time.Millisecond * 250
 
-		ctx := context.Background()
+	var devEnvName string
 
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
-		}
-		devenvironment := &devv1alpha1.DevEnvironment{}
+	BeforeEach(func() {
+		devEnvName = "test-env-" + randSuffix()
+	})
 
+	Context("When creating a DevEnvironment", func() {
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind DevEnvironment")
-			err := k8sClient.Get(ctx, typeNamespacedName, devenvironment)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &devv1alpha1.DevEnvironment{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+			ctx := context.Background()
+			devEnv := &devv1alpha1.DevEnvironment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      devEnvName,
+					Namespace: "default",
+				},
+				Spec: devv1alpha1.DevEnvironmentSpec{
+					Repository: "git+https://git.machinology.local/myproject",
+				},
 			}
+			Expect(k8sClient.Create(ctx, devEnv)).To(Succeed())
 		})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &devv1alpha1.DevEnvironment{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+		It("should create a Pod", func() {
+			ctx := context.Background()
+			pod := &corev1.Pod{}
 
-			By("Cleanup the specific resource instance DevEnvironment")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &DevEnvironmentReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName + "-pod",
+					Namespace: "default",
+				}, pod)
+			}, timeout, interval).Should(Succeed())
 		})
 	})
 })
+
+func randSuffix() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}

@@ -24,6 +24,12 @@ manifests:
 generate:
   make generate
 
+# run tests 
+[group("kubebuilder")]
+[no-cd]
+test:
+  make test
+
 
 # init module
 [group("golang")]
@@ -43,12 +49,6 @@ restore:
 build:
   mkdir -p bin
   go build -o bin/devenv-controller ./cmd/main.go
-
-# run tests 
-[group("golang")]
-[no-cd]
-test:
-  go test -v ./internal/controller/...
 
 # run all tests with coverage
 [group("golang")]

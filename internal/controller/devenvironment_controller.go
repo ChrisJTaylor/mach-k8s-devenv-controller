@@ -19,13 +19,18 @@ package controller
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	devv1alpha1 "github.com/machinology/mach-k8s-devenv-controller/api/v1alpha1"
 )
+
+const devEnvFinalizer = "dev.machinology.dev/finalizer"
 
 // DevEnvironmentReconciler reconciles a DevEnvironment object
 type DevEnvironmentReconciler struct {
@@ -49,15 +54,66 @@ type DevEnvironmentReconciler struct {
 func (r *DevEnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	devEnv := &devv1alpha1.DevEnvironment{}
+	if err := r.Get(ctx, req.NamespacedName, devEnv); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	return ctrl.Result{}, nil
+	if !devEnv.DeletionTimestamp.IsZero() {
+		return ctrl.Result{}, r.handleDeletion(ctx, devEnv)
+	}
+
+	if !controllerutil.ContainsFinalizer(devEnv, devEnvFinalizer) {
+		controllerutil.AddFinalizer(devEnv, devEnvFinalizer)
+		if err := r.Update(ctx, devEnv); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      devEnv.Name + "-pod",
+			Namespace: devEnv.Namespace,
+		},
+	}
+
+	_, err := ctrl.CreateOrUpdate(ctx, r.Client, pod, func() error {
+		pod.Spec = corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:    "devenv",
+					Image:   "nixos/nix",
+					Command: []string{"nix", "develop", devEnv.Spec.Repository},
+				},
+			},
+		}
+		return nil
+	})
+
+	return ctrl.Result{}, err
+}
+
+func (r *DevEnvironmentReconciler) handleDeletion(ctx context.Context, devEnv *devv1alpha1.DevEnvironment) error {
+	pod := &corev1.Pod{}
+	err := r.Get(ctx, client.ObjectKey{
+		Name:      devEnv.Name + "-pod",
+		Namespace: devEnv.Namespace,
+	}, pod)
+
+	if err == nil {
+		if err := r.Delete(ctx, pod); err != nil {
+			return err
+		}
+	}
+
+	controllerutil.RemoveFinalizer(devEnv, devEnvFinalizer)
+	return r.Update(ctx, devEnv)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DevEnvironmentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&devv1alpha1.DevEnvironment{}).
-		Named("devenvironment").
+		Owns(&corev1.Pod{}).
 		Complete(r)
 }
