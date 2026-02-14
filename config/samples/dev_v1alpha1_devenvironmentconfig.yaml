@@ -1,0 +1,9 @@
+apiVersion: dev.machinology.dev/v1alpha1
+kind: DevEnvironmentConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: mach-k8s-devenv-controller
+    app.kubernetes.io/managed-by: kustomize
+  name: devenvironmentconfig-sample
+spec:
+  # TODO(user): Add fields here

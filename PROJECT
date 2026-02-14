@@ -8,4 +8,23 @@ layout:
 - go.kubebuilder.io/v4
 projectName: mach-k8s-devenv-controller
 repo: github.com/machinology/mach-k8s-devenv-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: machinology.dev
+  group: dev
+  kind: DevEnvironment
+  path: github.com/machinology/mach-k8s-devenv-controller/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: machinology.dev
+  group: dev
+  kind: DevEnvironmentConfig
+  path: github.com/machinology/mach-k8s-devenv-controller/api/v1alpha1
+  version: v1alpha1
 version: "3"
