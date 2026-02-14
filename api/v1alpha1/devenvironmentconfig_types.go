@@ -25,14 +25,7 @@ import (
 
 // DevEnvironmentConfigSpec defines the desired state of DevEnvironmentConfig
 type DevEnvironmentConfigSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of DevEnvironmentConfig. Edit devenvironmentconfig_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	Tools []string `json:"tools,omitempty"`
 }
 
 // DevEnvironmentConfigStatus defines the observed state of DevEnvironmentConfig.

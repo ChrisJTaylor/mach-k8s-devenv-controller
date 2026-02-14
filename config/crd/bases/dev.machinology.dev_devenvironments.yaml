@@ -39,10 +39,10 @@ spec:
           spec:
             description: spec defines the desired state of DevEnvironment
             properties:
-              foo:
-                description: foo is an example field of DevEnvironment. Edit devenvironment_types.go
-                  to remove/update
+              repository:
                 type: string
+            required:
+            - repository
             type: object
           status:
             description: status defines the observed state of DevEnvironment
