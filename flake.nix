@@ -53,7 +53,6 @@
             export PATH="$PWD/bin:$PATH"
 
             # Set kind specific vars
-            export KIND_EXPERIMENTAL_PROVIDER=podman
             export KUBECONFIG=./kind-test-config
 
             # Optional: Setup a local KIND cluster
