@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,6 +67,45 @@ var _ = Describe("DevEnvironment Controller", func() {
 					Namespace: "default",
 				}, pod)
 			}, timeout, interval).Should(Succeed())
+		})
+	})
+
+	Context("When deleting a DevEnvironment", func() {
+		BeforeEach(func() {
+			ctx := context.Background()
+			devEnv := &devv1alpha1.DevEnvironment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      devEnvName,
+					Namespace: "default",
+				},
+				Spec: devv1alpha1.DevEnvironmentSpec{
+					Repository: "git+https://git.machinology.local/myproject",
+				},
+			}
+			Expect(k8sClient.Create(ctx, devEnv)).To(Succeed())
+
+			Eventually(func() bool {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName,
+					Namespace: "default",
+				}, devEnv); err != nil {
+					return false
+				}
+				return controllerutil.ContainsFinalizer(devEnv, devEnvFinalizer)
+			}, timeout, interval).Should(BeTrue())
+
+			Expect(k8sClient.Delete(ctx, devEnv)).To(Succeed())
+		})
+
+		It("Should delete the Pod", func() {
+			ctx := context.Background()
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName + "-pod",
+					Namespace: "default",
+				}, &corev1.Pod{})
+			}, timeout, interval).Should(MatchError(ContainSubstring("not found")))
 		})
 	})
 })
