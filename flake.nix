@@ -22,6 +22,7 @@
             gopls
             gotools
             go-tools
+            golangci-lint
 
             # Kubernetes development
             kubebuilder

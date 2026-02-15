@@ -93,3 +93,14 @@ run:
 [no-cd]
 watch-tests:
   watchexec -c -e go "just test"
+
+
+# run linter
+[group("quality")]
+lint:
+  golangci-lint run
+
+# run formatter
+[group("quality")]
+format:
+  golangci-lint fmt
