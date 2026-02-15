@@ -39,6 +39,7 @@
             setup-envtest
             just
             watchexec
+            docker
           ];
 
           shellHook = ''
