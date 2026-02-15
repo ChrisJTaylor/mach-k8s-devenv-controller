@@ -27,8 +27,14 @@ jobs:
       - name: Running ff tests
         run: nix develop --command just test
 
+      - name: Are we inside a container?
+        run: |
+          systemd-detect-virt
+          cat /proc/1/cgroup
+
       - name: Running e2e tests
-        run: nix develop --command just test-e2e
+        run: |
+          nix develop --command just test-e2e
 
   review:
     name: Review
