@@ -7,17 +7,13 @@ on:
 jobs:
   lint:
     name: Lint codebase
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, nix]
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
       - name: Run linter
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.5.0
+        run: nix develop --command just lint
+
+      - name: Run formatter
+        run: nix develop --command just format
