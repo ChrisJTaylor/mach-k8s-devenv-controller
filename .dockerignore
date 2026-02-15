@@ -9,3 +9,8 @@
 # Re-include Go module files
 !go.mod
 !go.sum
+
+# Also...
+!cmd/
+!internal/
+!api/

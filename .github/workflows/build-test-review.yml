@@ -12,22 +12,28 @@ jobs:
       - name: Clone the code
         uses: actions/checkout@v4
 
-      - name: Running Tests
-        run: nix develop --command just test
+      - name: Building solution
+        run: nix develop --command just build
+
   test:
     name: Run tests
+    if: success()
     runs-on: [self-hosted, nix]
     needs: build
     steps:
       - name: Clone the code
         uses: actions/checkout@v4
 
-      - name: Running Tests
+      - name: Running ff tests
         run: nix develop --command just test
+
+      - name: Running e2e tests
+        run: nix develop --command just test-e2e
 
   review:
     name: Review
     needs: [build, test]
+    if: success()
     permissions:
       contents: read
       pull-requests: write

@@ -32,3 +32,6 @@ go.work
 # nix files
 .direnv/
 .envrc
+
+# kind test files
+kind-test-config

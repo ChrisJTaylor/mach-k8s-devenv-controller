@@ -40,7 +40,7 @@ restore:
 # build solution
 [group("golang")]
 [no-cd]
-build:
+build: restore
   mkdir -p bin
   go build -o bin/devenv-controller ./cmd/main.go
 
@@ -60,11 +60,14 @@ generate-coverage:
   go test -coverprofile=coverage.out ./internal/... || true
   go tool cover -html=coverage.out
 
+# run e2e tests
+[group("golang")]
+test-e2e:
+  make test-e2e
+
 # run all tests including e2e 
 [group("golang")]
-test-all:
-  go test -v ./internal/...
-  go test -v ./test/e2e/...
+test-all: test test-e2e
 
 # run benchmarks
 [group("golang")]
