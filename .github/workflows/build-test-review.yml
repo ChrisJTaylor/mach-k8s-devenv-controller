@@ -1,0 +1,68 @@
+name: Build, test and review
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build solution
+    runs-on: [self-hosted, nix]
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+
+      - name: Running Tests
+        run: nix develop --command just test
+  test:
+    name: Run tests
+    runs-on: [self-hosted, nix]
+    needs: build
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+
+      - name: Running Tests
+        run: nix develop --command just test
+
+  review:
+    name: Review
+    needs: [build, test]
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: [self-hosted, nix]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: machinology/mach-pull-request-review-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ollama-url: ${{ secrets.OLLAMA_URL }}
+          ollama-model: "qwen3-coder:30b"
+          review-focus: "bugs,security,performance,maintenance"
+          max-comments: 30
+
+  auto-merge:
+    needs: review
+    if: |
+      success() &&
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'automerge')
+    runs-on: [self-hosted, nix]
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: pascalgn/automerge-action@v0.16.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_LABELS: "automated,!hold"
+          MERGE_METHOD: "squash"
+          MERGE_COMMIT_MESSAGE: "pull-request-title"
+          MERGE_FORKS: "false"
+          MERGE_RETRIES: "12"
+          MERGE_RETRY_SLEEP: "600000"
+          MERGE_REQUIRED_APPROVALS: "0"
+          MERGE_DELETE_BRANCH: "true"
+          UPDATE_LABELS: ""
+          UPDATE_METHOD: "rebase"

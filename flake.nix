@@ -38,6 +38,7 @@
             gnumake
             setup-envtest
             just
+            watchexec
           ];
 
           shellHook = ''
