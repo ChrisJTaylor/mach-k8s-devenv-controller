@@ -68,6 +68,23 @@ var _ = Describe("DevEnvironment Controller", func() {
 				}, pod)
 			}, timeout, interval).Should(Succeed())
 		})
+
+		It("Should run nix develop with the repository URL", func() {
+			ctx := context.Background()
+			pod := &corev1.Pod{}
+
+			Eventually(func() []string {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName + "-pod",
+					Namespace: "default",
+				}, pod); err != nil {
+					return nil
+				}
+				return pod.Spec.Containers[0].Command
+			}, timeout, interval).Should(Equal([]string{
+				"nix", "develop", "git+https://git.machinology.local/myproject",
+			}))
+		})
 	})
 
 	Context("When deleting a DevEnvironment", func() {
