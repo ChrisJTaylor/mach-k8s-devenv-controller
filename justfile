@@ -1,5 +1,8 @@
 default_group := "dev"
 
+alias t := test
+alias ta := test-all
+
 # show all available tasks
 _default:
   @just --list
