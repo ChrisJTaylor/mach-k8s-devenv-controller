@@ -2,6 +2,7 @@ default_group := "dev"
 
 alias t := test
 alias ta := test-all
+alias c := create
 
 # show all available tasks
 _default:
@@ -26,6 +27,10 @@ manifests:
 [group("kubebuilder")]
 generate:
   make generate
+
+# generate and create manifests
+[group("kubebuilder")]
+create: generate manifests
 
 
 # init module

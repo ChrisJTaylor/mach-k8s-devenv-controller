@@ -25,7 +25,8 @@ import (
 
 // DevEnvironmentConfigSpec defines the desired state of DevEnvironmentConfig
 type DevEnvironmentConfigSpec struct {
-	Tools []string `json:"tools,omitempty"`
+	UserEnvironment string   `json:"userEnvironment,omitempty"`
+	Tools           []string `json:"tools,omitempty"`
 }
 
 // DevEnvironmentConfigStatus defines the observed state of DevEnvironmentConfig.
