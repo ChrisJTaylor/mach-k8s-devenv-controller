@@ -1,0 +1,27 @@
+name: Build and push release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build solution
+    runs-on: [self-hosted, nix, linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        env:
+          - IMAGE_NAME
+        run: |
+          nix develop --command just build-image ${{ env.IMAGE_NAME }} ${{ github.event.release.tag_name }}
+
+      - name: Push image
+        env:
+          - IMAGE_NAME
+        run: |
+          nix develop --command just push-image ${{ env.IMAGE_NAME }} ${{ github.event.release.tag_name }}

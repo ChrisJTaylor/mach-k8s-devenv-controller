@@ -2,7 +2,9 @@ default_group := "dev"
 
 alias t := test
 alias ta := test-all
-alias c := create
+alias cr := create-resources
+
+registry := "registry.k3s.machinology.internal:5000"
 
 # show all available tasks
 _default:
@@ -30,8 +32,17 @@ generate:
 
 # generate and create manifests
 [group("kubebuilder")]
-create: generate manifests
+create-resources: generate manifests
 
+# build docker image
+[group("container")]
+build-image name tag:
+  make docker-build IMG={{registry}}/{{name}}:{{tag}}
+
+# push docker image
+[group("container")]
+push-image name tag:
+  docker push {{registry}}/{{name}}:{{tag}}
 
 # init module
 [group("golang")]
