@@ -2,6 +2,8 @@ name: Build, test and review
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
