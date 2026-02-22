@@ -4,7 +4,7 @@ alias t := test
 alias ta := test-all
 alias cr := create-resources
 
-registry := "registry.k3s.machinology.internal:5000"
+registry := "registry.k3s.machinology.internal:30500"
 
 # show all available tasks
 _default:
