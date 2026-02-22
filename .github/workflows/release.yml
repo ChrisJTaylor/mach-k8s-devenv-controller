@@ -18,11 +18,13 @@ jobs:
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
       - name: Build image
-        env: IMAGE_NAME
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
           nix develop --command just build-image $IMAGE_NAME ${{ github.event.release.tag_name }}
 
       - name: Push image
-        env: IMAGE_NAME
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
           nix develop --command just push-image $IMAGE_NAME ${{ github.event.release.tag_name }}
