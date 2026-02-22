@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  build:
-    name: Build solution
+  build-and-test:
+    name: Build and test solution
     runs-on: [self-hosted, nix]
     steps:
       - name: Clone the code
@@ -14,15 +14,6 @@ jobs:
 
       - name: Building solution
         run: nix develop --command just build
-
-  test:
-    name: Run tests
-    if: success()
-    runs-on: [self-hosted, nix]
-    needs: build
-    steps:
-      - name: Clone the code
-        uses: actions/checkout@v4
 
       - name: Running ff tests
         run: nix develop --command just test
@@ -32,7 +23,7 @@ jobs:
 
   review:
     name: Review
-    needs: [build, test]
+    needs: build-and-test
     if: |
       github.event_name == 'pull_request'
     permissions:
