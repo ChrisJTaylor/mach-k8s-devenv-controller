@@ -70,6 +70,17 @@ func (r *DevEnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}
 
+	config := &devv1alpha1.DevEnvironmentConfig{}
+	_ = r.Get(ctx, client.ObjectKey{
+		Name:      "cluster-defaults",
+		Namespace: devEnv.Namespace,
+	}, config)
+
+	command := []string{"nix", "develop", devEnv.Spec.Repository}
+	if config.Spec.Tools != nil {
+		command = append(command, config.Spec.Tools...)
+	}
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      devEnv.Name + "-pod",
@@ -83,7 +94,7 @@ func (r *DevEnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				{
 					Name:    "devenv",
 					Image:   "nixos/nix",
-					Command: []string{"nix", "develop", devEnv.Spec.Repository},
+					Command: command,
 				},
 			},
 		}

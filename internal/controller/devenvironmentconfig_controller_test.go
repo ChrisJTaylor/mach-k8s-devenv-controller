@@ -66,4 +66,5 @@ var _ = Describe("DevEnvironmentConfig Controller", func() {
 			}, timeout, interval).Should(Succeed())
 		})
 	})
+
 })

@@ -125,6 +125,50 @@ var _ = Describe("DevEnvironment Controller", func() {
 			}, timeout, interval).Should(MatchError(ContainSubstring("not found")))
 		})
 	})
+
+	Context("When a DevEnvironmentConfig exists", func() {
+		BeforeEach(func() {
+			ctx := context.Background()
+			config := &devv1alpha1.DevEnvironmentConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "cluster-defaults",
+					Namespace: "default",
+				},
+				Spec: devv1alpha1.DevEnvironmentConfigSpec{
+					UserEnvironment: "git+https://github.com/machinology/nixvim-config",
+					Tools:           []string{"git", "cocogitto"},
+				},
+			}
+			Expect(k8sClient.Create(ctx, config)).To(Succeed())
+
+			devEnv := &devv1alpha1.DevEnvironment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      devEnvName,
+					Namespace: "default",
+				},
+				Spec: devv1alpha1.DevEnvironmentSpec{
+					Repository: "git+https://github.com/machinology/myproject",
+				},
+			}
+			Expect(k8sClient.Create(ctx, devEnv)).To(Succeed())
+		})
+
+		It("Should include tools from the config in the pod", func() {
+			ctx := context.Background()
+			pod := &corev1.Pod{}
+
+			Eventually(func() []string {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName + "-pod",
+					Namespace: "default",
+				}, pod); err != nil {
+					return nil
+				}
+
+				return pod.Spec.Containers[0].Command
+			}, timeout, interval).Should(ContainElements("git", "cocogitto"))
+		})
+	})
 })
 
 func randSuffix() string {
