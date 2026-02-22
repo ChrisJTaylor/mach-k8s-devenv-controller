@@ -77,6 +77,10 @@ func (r *DevEnvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}, config)
 
 	command := []string{"nix", "develop", devEnv.Spec.Repository}
+	if config.Spec.UserEnvironment != "" {
+		command = append(command, config.Spec.UserEnvironment)
+	}
+
 	if config.Spec.Tools != nil {
 		command = append(command, config.Spec.Tools...)
 	}

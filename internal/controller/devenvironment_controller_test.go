@@ -153,6 +153,16 @@ var _ = Describe("DevEnvironment Controller", func() {
 			Expect(k8sClient.Create(ctx, devEnv)).To(Succeed())
 		})
 
+		AfterEach(func() {
+			ctx := context.Background()
+			config := &devv1alpha1.DevEnvironmentConfig{}
+			_ = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      "cluster-defaults",
+				Namespace: "default",
+			}, config)
+			_ = k8sClient.Delete(ctx, config)
+		})
+
 		It("Should include tools from the config in the pod", func() {
 			ctx := context.Background()
 			pod := &corev1.Pod{}
@@ -167,6 +177,21 @@ var _ = Describe("DevEnvironment Controller", func() {
 
 				return pod.Spec.Containers[0].Command
 			}, timeout, interval).Should(ContainElements("git", "cocogitto"))
+		})
+
+		It("Should include the userEnvironment in the pod", func() {
+			ctx := context.Background()
+			pod := &corev1.Pod{}
+
+			Eventually(func() []string {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Name:      devEnvName + "-pod",
+					Namespace: "default",
+				}, pod); err != nil {
+					return nil
+				}
+				return pod.Spec.Containers[0].Command
+			}, timeout, interval).Should(ContainElement("git+https://github.com/machinology/nixvim-config"))
 		})
 	})
 })
